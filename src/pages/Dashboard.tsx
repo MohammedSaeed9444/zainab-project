@@ -107,6 +107,7 @@ const Dashboard = () => {
                 <TableHeader>
                   <TableRow className="bg-muted/50">
                     <TableHead className="font-semibold">ID</TableHead>
+                    <TableHead className="font-semibold">Trip ID</TableHead>
                     <TableHead className="font-semibold">Trip Date</TableHead>
                     <TableHead className="font-semibold">Driver ID</TableHead>
                     <TableHead className="font-semibold">Reason</TableHead>
@@ -121,6 +122,7 @@ const Dashboard = () => {
                   {filteredAndSortedTickets.map((ticket) => (
                     <TableRow key={ticket.id} className="hover:bg-muted/30 transition-colors">
                       <TableCell className="font-mono text-sm">{ticket.id.slice(-6)}</TableCell>
+                      <TableCell className="font-medium">{ticket.tripId}</TableCell>
                       <TableCell>{format(ticket.tripDate, "MMM dd, yyyy")}</TableCell>
                       <TableCell className="font-medium">{ticket.driverId}</TableCell>
                       <TableCell>

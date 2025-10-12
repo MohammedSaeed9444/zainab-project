@@ -34,6 +34,7 @@ import { Ticket, TicketReason, City, ServiceType, AgentName } from "@/types/tick
 import { toast } from "sonner";
 
 const formSchema = z.object({
+  tripId: z.string().min(1, "Trip ID is required"),
   tripDate: z.date({
     required_error: "Trip date is required",
   }),
@@ -56,6 +57,7 @@ const CreateTicket = () => {
   const onSubmit = (data: FormValues) => {
     const ticket: Ticket = {
       id: Date.now().toString(),
+      tripId: data.tripId,
       tripDate: data.tripDate,
       driverId: parseInt(data.driverId),
       reason: data.reason as TicketReason,
@@ -82,6 +84,20 @@ const CreateTicket = () => {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="tripId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Trip ID</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter trip ID" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
                 <FormField
                   control={form.control}
                   name="tripDate"

@@ -5,6 +5,7 @@ export type AgentName = "Ahmed" | "Jack";
 
 export interface Ticket {
   id: string;
+  tripId: string;
   tripDate: Date;
   driverId: number;
   reason: TicketReason;
