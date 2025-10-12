@@ -35,7 +35,8 @@ import { CalendarIcon } from "lucide-react";
 const Dashboard = () => {
   const [tickets, setTickets] = useState<Ticket[]>(() => ticketStore.getAll());
   const [reasonFilter, setReasonFilter] = useState<string>("all");
-  const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined);
+  const [dateFilterFrom, setDateFilterFrom] = useState<Date | undefined>(undefined);
+  const [dateFilterTo, setDateFilterTo] = useState<Date | undefined>(undefined);
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 20;
 
@@ -70,12 +71,28 @@ const Dashboard = () => {
       result = result.filter((ticket) => ticket.reason === reasonFilter);
     }
 
-    // Filter by date
-    if (dateFilter) {
+    // Filter by date range
+    if (dateFilterFrom || dateFilterTo) {
       result = result.filter((ticket) => {
-        const ticketDate = format(ticket.tripDate, "yyyy-MM-dd");
-        const filterDate = format(dateFilter, "yyyy-MM-dd");
-        return ticketDate === filterDate;
+        const ticketDate = new Date(ticket.tripDate);
+        ticketDate.setHours(0, 0, 0, 0);
+        
+        if (dateFilterFrom && dateFilterTo) {
+          const from = new Date(dateFilterFrom);
+          from.setHours(0, 0, 0, 0);
+          const to = new Date(dateFilterTo);
+          to.setHours(23, 59, 59, 999);
+          return ticketDate >= from && ticketDate <= to;
+        } else if (dateFilterFrom) {
+          const from = new Date(dateFilterFrom);
+          from.setHours(0, 0, 0, 0);
+          return ticketDate >= from;
+        } else if (dateFilterTo) {
+          const to = new Date(dateFilterTo);
+          to.setHours(23, 59, 59, 999);
+          return ticketDate <= to;
+        }
+        return true;
       });
     }
 
@@ -83,7 +100,7 @@ const Dashboard = () => {
     result.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
     return result;
-  }, [tickets, reasonFilter, dateFilter]);
+  }, [tickets, reasonFilter, dateFilterFrom, dateFilterTo]);
 
   const totalPages = Math.ceil(filteredAndSortedTickets.length / ITEMS_PER_PAGE);
   const paginatedTickets = useMemo(() => {
@@ -100,8 +117,19 @@ const Dashboard = () => {
     setCurrentPage(1);
   };
 
-  const handleDateFilterChange = (date: Date | undefined) => {
-    setDateFilter(date);
+  const handleDateFromChange = (date: Date | undefined) => {
+    setDateFilterFrom(date);
+    setCurrentPage(1);
+  };
+
+  const handleDateToChange = (date: Date | undefined) => {
+    setDateFilterTo(date);
+    setCurrentPage(1);
+  };
+
+  const clearDateFilters = () => {
+    setDateFilterFrom(undefined);
+    setDateFilterTo(undefined);
     setCurrentPage(1);
   };
 
@@ -124,7 +152,7 @@ const Dashboard = () => {
               <CardTitle>All Tickets</CardTitle>
               <CardDescription>Sorted by creation date (newest first)</CardDescription>
             </div>
-            <div className="flex gap-4">
+            <div className="flex gap-4 flex-wrap">
               <div className="w-64">
                 <Select value={reasonFilter} onValueChange={handleReasonFilterChange}>
                   <SelectTrigger>
@@ -144,30 +172,53 @@ const Dashboard = () => {
                   <Button
                     variant="outline"
                     className={cn(
-                      "w-64 justify-start text-left font-normal",
-                      !dateFilter && "text-muted-foreground"
+                      "w-48 justify-start text-left font-normal",
+                      !dateFilterFrom && "text-muted-foreground"
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dateFilter ? format(dateFilter, "PPP") : "Filter by date"}
+                    {dateFilterFrom ? format(dateFilterFrom, "PPP") : "From date"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="single"
-                    selected={dateFilter}
-                    onSelect={handleDateFilterChange}
+                    selected={dateFilterFrom}
+                    onSelect={handleDateFromChange}
                     initialFocus
                     className="p-3 pointer-events-auto"
                   />
                 </PopoverContent>
               </Popover>
-              {dateFilter && (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-48 justify-start text-left font-normal",
+                      !dateFilterTo && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dateFilterTo ? format(dateFilterTo, "PPP") : "To date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={dateFilterTo}
+                    onSelect={handleDateToChange}
+                    initialFocus
+                    className="p-3 pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+              {(dateFilterFrom || dateFilterTo) && (
                 <Button
                   variant="ghost"
-                  onClick={() => handleDateFilterChange(undefined)}
+                  onClick={clearDateFilters}
                 >
-                  Clear Date
+                  Clear Dates
                 </Button>
               )}
             </div>
